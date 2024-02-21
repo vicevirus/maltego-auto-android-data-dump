@@ -64,7 +64,7 @@ class MobileDumper(DiscoverableTransform):
         except Exception as e:
             response.addUIMessage("Failed to extract WhatsApp messages: " + str(e), UIM_TYPES["partial"])
 
-        # Get chrome history, but its not working rn idk why
+
         try:
             browsing_history = cls.get_chrome_history(dataDir)
             for history_item in browsing_history:
@@ -211,8 +211,6 @@ class MobileDumper(DiscoverableTransform):
                 history.append({'url': url_encoded, 'last_visit_time': readable_time})
 
 
-
-
         except sqlite3.Error as e:
             print(f"Database error: {e}")
         finally:
@@ -220,4 +218,5 @@ class MobileDumper(DiscoverableTransform):
                 conn.close()
         return history
     
+
 
