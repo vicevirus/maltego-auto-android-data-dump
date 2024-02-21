@@ -64,15 +64,21 @@ class MobileDumper(DiscoverableTransform):
         except Exception as e:
             response.addUIMessage("Failed to extract WhatsApp messages: " + str(e), UIM_TYPES["partial"])
 
-        # # Get chrome history, but its not working rn idk why
-        # try:
-        #     browsing_history = cls.get_chrome_history(dataDir)
-        #     for history_item in browsing_history:
-        #        print(history_item)
-        #        response.addEntity(Phrase, 'google.com')
-              
-        # except Exception as e:
-        #     response.addUIMessage("Failed to extract browsing history: " + str(e), UIM_TYPES["partial"])
+        # Get chrome history, but its not working rn idk why
+        try:
+            browsing_history = cls.get_chrome_history(dataDir)
+            for history_item in browsing_history:
+                unique_identifier = history_item['url'][:100]  # Truncate to prevent overly long display values
+                history_entity = response.addEntity('maltego.Website', unique_identifier)
+
+                # Adding details as properties including last visited time
+                history_entity.addProperty(fieldName='url', displayName='URL', value=history_item['url'])
+                history_entity.addProperty(fieldName='last_visit_time', displayName='Last Visit Time', value=history_item['last_visit_time'])
+                history_entity.addProperty(fieldName='category', displayName='Category', value="Chrome History")
+        except Exception as e:
+            response.addUIMessage("Failed to extract browsing history: " + str(e), UIM_TYPES["partial"])
+
+
 
 
 
@@ -193,16 +199,19 @@ class MobileDumper(DiscoverableTransform):
             conn = sqlite3.connect(history_db)
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT url, title, last_visit_time FROM urls WHERE hidden = 0 ORDER BY last_visit_time DESC
+                SELECT url, last_visit_time FROM urls WHERE hidden = 0 ORDER BY last_visit_time DESC
             """)
             for row in cursor.fetchall():
-                url, title, last_visit_time = row
-                url_encoded = url.encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')
-                title_encoded = title.encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')
-                # Convert Chrome's timestamp (microseconds since Jan 1, 1601) to a readable datetime format
-                # Chrome's time is in microseconds; Python's datetime operates in seconds
+                url, last_visit_time = row
+                # Convert last_visit_time from microseconds since January 1, 1601, to a readable datetime format
+                epoch_start = datetime(1601, 1, 1) + timedelta(microseconds=last_visit_time)
+                readable_time = epoch_start.strftime('%Y-%m-%d %H:%M:%S')
 
-                history.append({'url': url_encoded, 'title': title_encoded, 'last_visit_time': last_visit_time})
+                url_encoded = url.encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')
+                history.append({'url': url_encoded, 'last_visit_time': readable_time})
+
+
+
 
         except sqlite3.Error as e:
             print(f"Database error: {e}")
