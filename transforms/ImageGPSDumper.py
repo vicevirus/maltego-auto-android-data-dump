@@ -5,6 +5,7 @@ import piexif
 from PIL import Image
 import os
 
+
 class ImageGPSDumper(DiscoverableTransform):
     """
     A Maltego transform to extract GPS coordinates from images in a specified directory.
@@ -25,6 +26,17 @@ class ImageGPSDumper(DiscoverableTransform):
                     fieldName="long", displayName="Longitude", value=gps['GPSLongitude'])
                 gps_entity.addProperty(
                     fieldName="filename", displayName="File Name", value=gps['FileName'])
+                gps_entity.addProperty(
+                    fieldName="fullpath", displayName="Full Path", value=gps['FullPath'])
+                if "DateTimeOriginal" in gps:
+                    gps_entity.addProperty(
+                        fieldName="datetime", displayName="Date Time", value=gps['DateTimeOriginal'])
+                if "GPSDateStamp" in gps:
+                    gps_entity.addProperty(
+                        fieldName="gpsdate", displayName="GPS Date", value=gps['GPSDateStamp'])
+                if "GPSTimeStamp" in gps:
+                    gps_entity.addProperty(
+                        fieldName="gpstime", displayName="GPS Time", value=gps['GPSTimeStamp'])
                 # Use a property to indicate the category
                 gps_entity.addProperty(
                     fieldName="category", displayName="Category", value="GPS")
@@ -59,13 +71,29 @@ class ImageGPSDumper(DiscoverableTransform):
                                 e = exifDict[ifd][tag]
                             exifTagDict[ifd][piexif.TAGS[ifd][tag]["name"]] = e
                     gps = exifTagDict['GPS']
-                    gpsData.append({
+                    data = {
                         "FullPath": fullFilePath,
                         "FileName": fileName,
                         "GPSLatitude": combinePosition(gps["GPSLatitude"])*((-1) if gps["GPSLatitudeRef"] == "S" else 1),
                         "GPSLongitude": combinePosition(gps["GPSLongitude"])*((-1) if gps["GPSLongitudeRef"] == "W" else 1),
-                    })
+                    }
+                    try:
+                        data["DateTimeOriginal"] = exifTagDict['Exif']['DateTimeOriginal']
+                    except:
+                        pass
+                    if "GPSDateStamp" in gps:
+                        data["GPSDateStamp"] = gps["GPSDateStamp"]
+                    try:
+                        if "GPSTimeStamp" in gps:
+                            data["GPSTimeStamp"] = f'{convertTupleToFloat(gps["GPSTimeStamp"][0])}:{convertTupleToFloat(gps["GPSTimeStamp"][1])}:{convertTupleToFloat(gps["GPSTimeStamp"][2])}'
+                    except:
+                        pass
+                    gpsData.append(data)
                 except:
                     pass
         return gpsData
 
+
+if __name__ == "__main__":
+    print(ImageGPSDumper.get_image_gps(
+        "/Users/pong/Desktop/Workspace/Chula/Year 4/Global Cyber Security Camp/Project/data"))

@@ -2,9 +2,8 @@ from maltego_trx.entities import Phrase, PhoneNumber, GPS
 from maltego_trx.maltego import UIM_TYPES
 from maltego_trx.transform import DiscoverableTransform
 from datetime import datetime, timedelta
-import piexif
-from PIL import Image
 import re
+from transforms import ImageGPSDumper
 
 import sqlite3
 import os
@@ -87,23 +86,9 @@ class MobileDumper(DiscoverableTransform):
                 "Failed to extract WhatsApp messages: " + str(e), UIM_TYPES["partial"])
 
         try:
-            image_gps = cls.get_image_gps(
-                os.path.join(dataDir, "media", "0", "DCIM"))
-            for gps in image_gps:
-                gps_entity = response.addEntity(
-                    GPS, f"{gps['GPSLatitude']}, {gps['GPSLongitude']}")
-                gps_entity.addProperty(
-                    fieldName="lat", displayName="Latitude", value=gps['GPSLatitude'])
-                gps_entity.addProperty(
-                    fieldName="long", displayName="Longitude", value=gps['GPSLongitude'])
-                gps_entity.addProperty(
-                    fieldName="filename", displayName="File Name", value=gps['FileName'])
-                # Use a property to indicate the category
-                gps_entity.addProperty(
-                    fieldName="category", displayName="Category", value="GPS")
+            ImageGPSDumper.ImageGPSDumper.create_entities(request, response)
         except Exception as e:
-            response.addUIMessage(
-                "Failed to extract GPS from images: " + str(e), UIM_TYPES["partial"])
+            pass
 
         # # Get chrome history, but its not working rn idk why
         # try:
@@ -283,40 +268,3 @@ class MobileDumper(DiscoverableTransform):
             if conn:
                 conn.close()
         return history
-
-    @staticmethod
-    def get_image_gps(DCIMFolderPath: str):
-        codec = 'latin-1'
-        gpsData = []
-        def convertTupleToFloat(x): return x[0]/x[1]
-
-        def combinePosition(x): return convertTupleToFloat(
-            x[0])+(convertTupleToFloat(x[1])/60)+(convertTupleToFloat(x[2])/3600)
-
-        for path, _, files in os.walk(DCIMFolderPath):
-            for fileName in files:
-                try:
-                    fullFilePath = os.path.join(path, fileName)
-                    img = Image.open(fullFilePath)
-                    exifDict = piexif.load(img.info["exif"])
-                    exifTagDict = {}
-                    thumbnail = exifDict.pop('thumbnail')
-                    exifTagDict['thumbnail'] = thumbnail.decode(codec)
-                    for ifd in exifDict:
-                        exifTagDict[ifd] = {}
-                        for tag in exifDict[ifd]:
-                            try:
-                                e = exifDict[ifd][tag].decode(codec)
-                            except AttributeError:
-                                e = exifDict[ifd][tag]
-                            exifTagDict[ifd][piexif.TAGS[ifd][tag]["name"]] = e
-                    gps = exifTagDict['GPS']
-                    gpsData.append({
-                        "FullPath": fullFilePath,
-                        "FileName": fileName,
-                        "GPSLatitude": combinePosition(gps["GPSLatitude"])*((-1) if gps["GPSLatitudeRef"] == "S" else 1),
-                        "GPSLongitude": combinePosition(gps["GPSLongitude"])*((-1) if gps["GPSLongitudeRef"] == "W" else 1),
-                    })
-                except:
-                    pass
-        return gpsData
