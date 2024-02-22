@@ -44,14 +44,14 @@ class VerifyPhoneNumber(DiscoverableTransform):
         """
         Adds a phone region entity to the response based on API data.
         """
-        phone_region = response.addEntity("maltego.Location", data.get("phone_region"))
+        region =  data.get("phone_region")
+        carrier = data.get("carrier")
+        phone_region = response.addEntity("maltego.Location", f"{region} : {carrier}")
         # Adding more properties to the entity as needed
         phone_region.addProperty(fieldName="country", displayName="Country", value=data.get("country"))
         phone_region.addProperty(fieldName="carrier", displayName="Carrier", value=data.get("carrier"))
         # You can add more properties here as needed
 
-# Boilerplate code to ensure the transform script can run stand-alone or be imported
-if __name__ == "__main__":
-    VerifyPhoneNumber.run_transform()
+
 
 

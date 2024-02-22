@@ -1,1 +1,3 @@
 maltego-trx
+piexif
+olefile

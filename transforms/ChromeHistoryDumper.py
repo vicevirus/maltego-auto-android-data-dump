@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import sqlite3
 import os
 
-class ChromeHistoryExtractor(DiscoverableTransform):
+class ChromeHistoryDumper(DiscoverableTransform):
     """
     A Maltego transform to extract and present Chrome browsing history.
     """
