@@ -51,3 +51,4 @@ class ChromeHistoryDumper(DiscoverableTransform):
             if conn:
                 conn.close()
         return history
+        

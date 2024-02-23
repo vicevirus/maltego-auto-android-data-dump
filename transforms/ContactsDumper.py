@@ -13,6 +13,7 @@ class ContactsDumper(DiscoverableTransform):
             for contact in contacts:
                 person = response.addEntity("maltego.Person", contact['name'])
                 person.addProperty(fieldName="phonenumber", displayName="Phone Number", value=contact['phone'])
+                person.addProperty(fieldName="dataDir", displayName="Data Dir", value=dataDir)
                 person.addProperty(fieldName="category", displayName="Category", value="Contacts")
         except Exception as e:
             response.addUIMessage("Failed to extract contacts: " + str(e), UIM_TYPES["partial"])
