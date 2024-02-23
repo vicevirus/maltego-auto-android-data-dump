@@ -42,6 +42,12 @@ Note: This project is part of GCC 2024 groupwork.
 - **Output:** Enriched Maltego entities with VirusTotal analysis results.
 - ![VirusTotal Analysis GIF](images/virusTotalURLCheck.gif)
 
+### Find SMS For Contacts
+- ![Find SMS for contact](images/findSMSForContacts.gif)
+
+### Find Call Logs For Contacts
+- ![Find Call Logs for contact](images/findCallLogsForContact.gif)
+
 ## Note on Access Requirements
 
 Accessing the `/data` partition on a mobile device typically requires **root access** or methods like **fastboot/JTAG**, depending on the device. These methods can bypass standard security mechanisms to retrieve data directly from the device's storage, which is essential for a comprehensive analysis. Please be aware that using these methods may void the warranty of the device and should be performed with caution.
